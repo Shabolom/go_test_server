@@ -2,8 +2,7 @@ package repository
 
 import (
 	"awesomeProject/config"
-	"awesomeProject/domain"
-	"github.com/gofrs/uuid"
+	"awesomeProject/iternal/domain"
 )
 
 type TeachersRepo struct {
@@ -13,19 +12,37 @@ func NewTeachersRepo() *TeachersRepo {
 	return &TeachersRepo{}
 }
 
-func (sr *TeachersRepo) Save() (domain.Teachers, error) {
+func (tr *TeachersRepo) Save(teacher domain.Teachers) (domain.Teachers, error) {
 
-	user := domain.Teachers{
-		Base:      domain.Base{},
-		Name:      "Dana",
-		Surname:   "Dancov",
-		MidleName: "Sharapov",
-	}
-	user.ID, _ = uuid.NewV4()
-	err := config.DB.Create(&user).Error
+	err := config.DB.Create(&teacher).Error
 
 	if err != nil {
 		return domain.Teachers{}, err
 	}
-	return user, nil
+	return teacher, nil
+}
+
+func (tr *TeachersRepo) Get() ([]domain.Teachers, error) {
+
+	var teacher []domain.Teachers
+
+	err := config.DB.Find(&teacher).Error
+
+	if err != nil {
+		return []domain.Teachers{}, err
+	}
+	return teacher, nil
+}
+
+func (tr *TeachersRepo) GetByID(key string) (domain.Teachers, error) {
+
+	var teacher domain.Teachers
+
+	err := config.DB.Where("id = ?", key).First(&teacher).Error
+
+	if err != nil {
+		return domain.Teachers{}, err
+	}
+
+	return teacher, nil
 }

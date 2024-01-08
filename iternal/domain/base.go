@@ -10,3 +10,7 @@ type Base struct {
 	CreatedAt time.Time `json:"created-at"`
 	UpdatedAt time.Time `json:"updated-at"`
 }
+
+type ID struct {
+	ID uuid.UUID `gorm:"type:uuid;" json:"id"`
+}
