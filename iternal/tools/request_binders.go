@@ -15,6 +15,7 @@ func RequestBinderBody(model interface{}, c *gin.Context) error {
 		})
 		return err
 	}
+
 	return nil
 }
 

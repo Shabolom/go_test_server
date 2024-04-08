@@ -1,10 +1,10 @@
 package middleware
 
 import (
+	"awesomeProject/iternal/models"
 	"awesomeProject/iternal/repository"
 	"awesomeProject/iternal/tools"
 	"errors"
-	"fmt"
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -12,30 +12,12 @@ import (
 	"time"
 )
 
-type login struct {
-	Username string `form:"username" json:"username" binding:"required"`
-	Password string `form:"password" json:"password" binding:"required"`
-}
-
 var identityKey = "id"
 var userRepo = repository.NewUserRepo()
 
 // User demo
 type User struct {
 	ID string
-}
-
-func JwtAuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		err := tools.TokenValid(c)
-		if err != nil {
-			println(err.Error())
-			c.String(http.StatusUnauthorized, "Unauthorized")
-			c.Abort()
-			return
-		}
-		c.Next()
-	}
 }
 
 func Passport() *jwt.GinJWTMiddleware {
@@ -48,6 +30,7 @@ func Passport() *jwt.GinJWTMiddleware {
 		Timeout:     time.Hour * 4,
 		MaxRefresh:  time.Hour * 24,
 		IdentityKey: identityKey,
+
 		// PayloadFunc просто переписать тк сложная хуйня
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(*User); ok {
@@ -57,6 +40,7 @@ func Passport() *jwt.GinJWTMiddleware {
 			}
 			return jwt.MapClaims{}
 		},
+
 		// IdentityHandler просто переписать тк сложная хуйня
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
@@ -64,22 +48,24 @@ func Passport() *jwt.GinJWTMiddleware {
 				ID: claims[identityKey].(string),
 			}
 		},
+
 		Authenticator: func(c *gin.Context) (interface{}, error) {
-			var loginVals login
+			var loginVals models.Login
 			// ShouldBind заполняет loginVals если поля совпадают
 			if err := c.ShouldBind(&loginVals); err != nil {
 				return "", jwt.ErrMissingLoginValues
 			}
-			userLogin := loginVals.Username
+
+			userLogin := loginVals.Login
 			password := loginVals.Password
+
 			result, err := userRepo.GetByKey("login", userLogin)
 
 			if err != nil {
 				return nil, errors.New("не верный логин или пароль")
 			}
 
-			fmt.Println(" userID: ", userLogin, "\n", "password: ", password)
-			if password == result.Password {
+			if tools.CheckPasswordHash(password, result.Password) {
 				return &User{
 					ID: result.ID.String(),
 				}, nil
@@ -90,7 +76,7 @@ func Passport() *jwt.GinJWTMiddleware {
 		Unauthorized: func(c *gin.Context, code int, message string) {
 			c.JSON(code, gin.H{
 				"code":    code,
-				"message": message,
+				"message": "вы не авторизированны",
 			})
 		},
 		// TokenLookup is a string in the form of "<source>:<name>" that is used

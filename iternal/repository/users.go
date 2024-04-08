@@ -1,5 +1,6 @@
 package repository
 
+// слой работы с сырыми данными
 import (
 	"awesomeProject/config"
 	"awesomeProject/iternal/domain"
@@ -63,7 +64,31 @@ func (ur *UserRepo) GetByKey(key, value string) (domain.Users, error) {
 	err := config.DB.
 		Unscoped().
 		Where(key+" = ?", value).
-		First(&user).Error
+		First(&user).
+		Error
+
+	if err != nil {
+		return domain.Users{}, err
+	}
 
 	return user, err
+}
+
+func (ur *UserRepo) Delet(key, value string) (domain.Users, error) {
+
+	result, err := ur.GetByKey(key, value)
+
+	if err != nil {
+		return domain.Users{}, err
+	}
+
+	err = config.DB.
+		Delete(&result).
+		Error
+
+	if err != nil {
+		return domain.Users{}, err
+	}
+
+	return result, err
 }

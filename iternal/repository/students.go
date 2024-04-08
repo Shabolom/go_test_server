@@ -27,18 +27,19 @@ func (sr *StudentRepo) Save(student domain.Student) (domain.Student, error) {
 }
 
 func (sr *StudentRepo) Get() ([]domain.Student, error) {
-
-	var student []domain.Student
+	var param domain.Student
+	var students []domain.Student
 
 	err := config.DB.
-		Find(&student).
+		Find(&students).
+		Order(param.CreatedAt).
 		Error
 
 	if err != nil {
 		return []domain.Student{}, err
 	}
 
-	return student, nil
+	return students, nil
 }
 
 func (sr *StudentRepo) GetByID(key string) (domain.Student, error) {
